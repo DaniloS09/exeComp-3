@@ -4,6 +4,10 @@
 #include <condition_variable>
 #include <array>
 
+
+using namespace std;
+
+
 // Classe TicTacToe
 class TicTacToe {
 private:
@@ -15,12 +19,29 @@ private:
     char winner; // Vencedor do jogo
 
 public:
-    TicTacToe() {
+    TicTacToe(char current_player, bool game_over,  char winner ):  current_player('X'), game_over(false), winner(' ')  {
         // Inicializar o tabuleiro e as variáveis do jogo
+        for(int i = 0; i <= 2; i++){ // percorrer todo o tabuleiros 
+            for(int j = 0, j <= 2, j++){
+                board[i][j] = ' '; // inicializa todas as posições com espaços vazios 
+            }
+        }
     }
 
     void display_board() {
         // Exibir o tabuleiro no console
+        for(int i = 0; i <= 2; i++){ // percorrer todo o tabuleiros 
+            for(int j = 0; j <= 2; j++){
+                cout << board[i][j]; 
+                if(j < 1){
+                    cout << '|' << 
+                }
+            }
+            cout << endl;
+            if(i < 1){
+                cout << "_________________" << endl; 
+            }
+        }
     }
 
     bool make_move(char player, int row, int col) {
@@ -74,7 +95,6 @@ private:
 // Função principal
 int main() {
     // Inicializar o jogo e os jogadores
-
     // Criar as threads para os jogadores
 
     // Aguardar o término das threads
