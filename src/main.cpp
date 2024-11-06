@@ -64,10 +64,10 @@ public:
             winner = 'D';
         }
         if(current_player == 'X'){ //alternar jogador. 
-            current_player == 'O';
-        }else(current_player == 'O');
+            current_player = 'O';
+        }else {
             current_player = 'X';
-
+        }
         turn_cv.notify_all(); //variavel de condição para acordar a thread o outro jogado.
         return true;
     }   
@@ -95,15 +95,13 @@ public:
         // Verificar se houve um empate --------- NECESSÁRIO SEMPRE VERIFICAR SE HOUVE VITORIA ANTES
         for(int i = 0; i < 3; i++){ // percorrer todo o tabuleiro para verificar se ainda há opção para jogar. 
             for(int j = 0; j < 3; j++){
-                if(board[i][j] = ' '){
+                if(board[i][j] == ' '){
                     return false;
-                }else {
-                    return true;
                 }
             }
         }
+    return true;
     }
-
     bool is_game_over() {
         // Retornar se o jogo terminou
         lock_guard<mutex> lock(board_mutex);
@@ -114,7 +112,18 @@ public:
         // Retornar o vencedor do jogo ('X', 'O', ou 'D' para empate)
         lock_guard<mutex> lock(board_mutex);
         return winner;
-
+    }
+    mutex& get_mutex(){
+        lock_guard<mutex> lock(board_mutex);
+        return board_mutex;
+    }
+    condition_variable& get_turn(){
+        lock_guard<mutex> lock(board_mutex);
+        return turn_cv;
+    }
+    char get_curret_player(){
+        lock_guard<mutex> lock(board_mutex);
+        return current_player;
     }
 };
 // Classe Player
@@ -131,11 +140,11 @@ public:
     void play() {
         // Executar jogadas de acordo com a estratégia escolhida
         while(!game.is_game_over()){
-            unique_lock<mutex> lock(game.board_mutex);
-            game.turn_cv.wait(lock, [&]() { return game.current_player == symbol || game.game_over; });
-            if(strategy = 'sequential'){
+            unique_lock<mutex> lock(game.get_mutex());
+            game.get_turn().wait(lock, [&]() { return game.get_curret_player() == symbol || game.is_game_over(); });
+            if(strategy == "sequential"){
                 play_sequential();
-            }else if (strategy = 'random'){
+            }else if (strategy == "random"){
                 play_random();
             }
         }
@@ -145,20 +154,20 @@ private:
     void play_sequential() {
         // Implementar a estratégia sequencial de jogadas
         for(int i = 0; i < 3; i++){ // percorrer todo o tabuleiros 
-            for(int j = 0; j < 2; j++){
+            for(int j = 0; j < 3; j++){
                 if(game.make_move(symbol, i, j)){//jogada realizada.
                     return;
                 };
             }
         }
     }
-
+    int row, col;
     void play_random() {
         // Implementar a estratégia aleatória de jogadas
         while(true){
-            row = rand() % 3 //numero aleatorio 0 a 2 para a linha.
-            col = rand() % 3 //numero aleatorio 0 a 2 para a coluna.
-            if(game.make_move(symbol, this->row, col)){ //jogada realizada.
+            row = rand() % 3; //numero aleatorio 0 a 2 para a linha.
+            col = rand() % 3; //numero aleatorio 0 a 2 para a coluna.
+            if(game.make_move(symbol, row, col)){ //jogada realizada.
                 return;
             }
             if(game.is_game_over()){// fim de jogo;
@@ -171,8 +180,8 @@ private:
 // Função principal
 int main() {
     // Inicializar o jogo e os jogadores
-    TicTacToe jogo;
-    Player jogador1(jogo, 'X', "radom");
+    TicTacToe jogo('X', false, ' ');
+    Player jogador1(jogo, 'O', "random");
     Player jogador2(jogo, 'X', "sequential");
     // Criar as threads para os jogadores
     thread Tjogador1(&Player::play, &jogador1);
@@ -186,6 +195,5 @@ int main() {
     } else { //algum ganhador;
         std::cout << "O jogador " << jogo.get_winner() << " venceu!" << std::endl;
     }
-
     return 0;
 }
